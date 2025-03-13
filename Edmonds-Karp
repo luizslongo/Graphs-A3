@@ -1,0 +1,72 @@
+from grafoLista import GrafoListaAdjacencia
+import math
+import os
+
+class Q1:
+    def __init__(self, grafo, arquivo, s, t):
+        self.grafo = grafo
+        self.arquivo = arquivo
+        self.s = int(s)
+        self.t = int(t)
+        self.grafo.ler(arquivo)
+        self.create_flow_net()
+
+    def EdmondsKarp(self):
+        F = 0
+
+        path = self.BFS()
+        while path != None:
+            fluxo = math.inf
+            for i in range(len(path)-1):
+                u = path[i]
+                v = path[i+1]
+                fluxo = min(self.grafo.peso(u, v), fluxo)
+
+            F += fluxo
+            for i in range(len(path)-1):
+                u = path[i]
+                v = path[i+1]
+                self.grafo.pesos[(u, v)] -= fluxo
+                self.grafo.pesos[(v, u)] += fluxo
+
+            path = self.BFS()
+        return F
+    
+    def create_flow_net(self):
+        for u, v in self.grafo.vertices:
+            if (u, v) in self.grafo.arestas:
+                self.grafo.adicionarAresta(v, u, 0)
+
+    def BFS(self):
+        C = {}
+        A = {}
+        for v in self.grafo.vertices:
+            C[v] = False
+            A[v] = None
+        C[self.s] = True
+
+        Q = [self.s]
+        while Q:
+            u = Q.pop(0)
+            for v in self.grafo.vizinhos(u):
+                if self.grafo.peso(u, v) > 0 and not C[v]:
+                    A[v] = u
+                    if v == self.t:
+                        p = [self.t]
+                        w = self.t
+                        while w != self.s:
+                            w = A[w]
+                            p.insert(0, w)
+                        return p
+                    C[v] = True
+                    Q.append(v)
+        return None
+
+# Exemplo de uso
+grafo = GrafoListaAdjacencia()
+arquivo = 'instancias/fluxo_maximo/db128.gr'
+s = 1
+t = 128
+EK = Q1(grafo, arquivo, s, t)
+fluxo_maximo = EK.EdmondsKarp()
+print("Fluxo Máximo: ", fluxo_maximo)
